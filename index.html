@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SME Loan Eligibility Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #4facfe;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .predict-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .predict-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .result-card.approved {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .result-card.rejected {
+            background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%);
+        }
+
+        .result-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .risk-indicator {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+
+        .risk-low {
+            background: #10b981;
+            color: white;
+        }
+
+        .risk-medium {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .risk-high {
+            background: #ef4444;
+            color: white;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .form-section, .results-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SME Loan Eligibility Platform</h1>
+            <p>AI-Powered Loan Assessment & Risk Analysis Tool</p>
+        </div>
+
+        <div class="content">
+            <div class="form-section">
+                <h2 class="section-title">Business Information</h2>
+                
+                <form id="loanForm">
+                    <div class="form-group">
+                        <label for="monthlyRevenue">Monthly Revenue (₹)</label>
+                        <input type="number" id="monthlyRevenue" name="monthlyRevenue" required min="1000" step="1000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="creditScore">Credit Score (300-900)</label>
+                        <input type="number" id="creditScore" name="creditScore" required min="300" max="900">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="businessAge">Business Age (Years)</label>
+                        <input type="number" id="businessAge" name="businessAge" required min="0" max="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sector">Business Sector</label>
+                        <select id="sector" name="sector" required>
+                            <option value="">Select Sector</option>
+                            <option value="Construction">Construction</option>
+                            <option value="Trading">Trading</option>
+                            <option value="Textile">Textile</option>
+                            <option value="Manufacturing">Manufacturing</option>
+                            <option value="Services">Services</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Education">Education</option>
+                            <option value="Food">Food & Beverage</option>
+                            <option value="Retail">Retail</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="employees">Number of Employees</label>
+                        <input type="number" id="employees" name="employees" min="1" max="10000" value="10">
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="gstCompliant" name="gstCompliant">
+                        <label for="gstCompliant">GST Compliant</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pan">PAN Card Number</label>
+                        <input type="text" id="pan" name="pan" required pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" 
+                               placeholder="ABCDE1234F" maxlength="10" style="text-transform: uppercase;">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gstNo">GST Identification Number</label>
+                        <input type="text" id="gstNo" name="gstNo" required 
+                               pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}"
+                               placeholder="22AAAAA0000A1Z5" maxlength="15" style="text-transform: uppercase;">
+                    </div>
+
+                    <button type="submit" class="predict-btn" id="predictBtn">
+                        Analyze Loan Eligibility
+                    </button>
+                </form>
+            </div>
+
+            <div class="results-section">
+                <h2 class="section-title">Analysis Results</h2>
+                
+                <div class="info-box">
+                    <strong>How it works:</strong> Our AI analyzes your business data against thousands of similar cases to predict loan eligibility, maximum amount (up to ₹1 crore), interest rates, and risk assessment.
+                </div>
+
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing your business data...</p>
+                </div>
+
+                <div id="error" class="error-message" style="display: none;"></div>
+
+                <div id="results" style="display: none;">
+                    <div id="approvalCard" class="result-card">
+                        <div class="result-label">Approval Probability</div>
+                        <div class="result-value" id="approvalRate">--%</div>
+                    </div>
+
+                    <div id="loanAmountCard" class="result-card">
+                        <div class="result-label">Maximum Loan Amount</div>
+                        <div class="result-value" id="maxLoan">₹--</div>
+                    </div>
+
+                    <div id="interestCard" class="result-card">
+                        <div class="result-label">Expected Interest Rate</div>
+                        <div class="result-value" id="interestRate">--%</div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px;">
+                        <div class="result-label" style="color: #333; margin-bottom: 10px;">Risk Assessment</div>
+                        <span id="riskLevel" class="risk-indicator">--</span>
+                    </div>
+
+                    <div id="recommendations" style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 10px;">
+                        <h3 style="color: #333; margin-bottom: 15px;">Recommendations</h3>
+                        <div id="recommendationText"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loanForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = {
+                monthly_revenue: parseInt(formData.get('monthlyRevenue')),
+                credit_score: parseInt(formData.get('creditScore')),
+                business_age: parseInt(formData.get('businessAge')),
+                sector: formData.get('sector'),
+                employees: parseInt(formData.get('employees')) || 10,
+                gst_compliant: formData.get('gstCompliant') === 'on',
+                pan: formData.get('pan').toUpperCase(),
+                gst_no: formData.get('gstNo').toUpperCase()
+            };
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('predictBtn').disabled = true;
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayResults(result.prediction);
+                } else {
+                    showError(result.error || 'An error occurred during prediction');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('predictBtn').disabled = false;
+            }
+        });
+
+        function displayResults(prediction) {
+            const results = document.getElementById('results');
+            
+            // Update approval probability
+            document.getElementById('approvalRate').textContent = prediction.approval_probability + '%';
+            const approvalCard = document.getElementById('approvalCard');
+            approvalCard.className = 'result-card ' + (prediction.likely_approved ? 'approved' : 'rejected');
+            
+            // Update loan amount
+            document.getElementById('maxLoan').textContent = '₹' + formatNumber(prediction.max_loan_amount);
+            
+            // Update interest rate
+            document.getElementById('interestRate').textContent = prediction.interest_rate + '%';
+            
+            // Update risk level
+            const riskElement = document.getElementById('riskLevel');
+            riskElement.textContent = prediction.risk_level;
+            riskElement.className = 'risk-indicator risk-' + prediction.risk_level.toLowerCase();
+            
+            // Generate recommendations
+            generateRecommendations(prediction);
+            
+            results.style.display = 'block';
+        }
+
+        function generateRecommendations(prediction) {
+            const recommendationDiv = document.getElementById('recommendationText');
+            let recommendations = [];
+
+            if (prediction.approval_probability < 50) {
+                recommendations.push('• Consider improving your credit score before applying');
+                recommendations.push('• Increase monthly revenue or business age if possible');
+                if (!prediction.gst_compliant) {
+                    recommendations.push('• Ensure GST compliance to improve eligibility');
+                }
+            } else {
+                recommendations.push('• Your business shows good potential for loan approval');
+                if (prediction.risk_level === 'High') {
+                    recommendations.push('• Consider providing additional collateral to reduce risk');
+                }
+            }
+
+            if (prediction.interest_rate > 15) {
+                recommendations.push('• Work on improving credit score to get better interest rates');
+            }
+
+            if (prediction.max_loan_amount < 1000000) {
+                recommendations.push('• Build business track record to access higher loan amounts');
+            }
+
+            recommendationDiv.innerHTML = recommendations.join('<br>');
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+        }
+
+        function formatNumber(num) {
+            if (num >= 10000000) {
+                return (num / 10000000).toFixed(1) + ' Cr';
+            } else if (num >= 100000) {
+                return (num / 100000).toFixed(1) + ' L';
+            } else {
+                return num.toLocaleString('en-IN');
+            }
+        }
+
+        // Auto-format PAN and GST inputs
+        document.getElementById('pan').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+
+        document.getElementById('gstNo').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    </script>
+</body>
+</html>
